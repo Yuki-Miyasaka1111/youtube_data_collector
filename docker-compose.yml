@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server:/app
+  client:
+    image: node:14
+    working_dir: /app
+    volumes:
+      - ./client:/app
+    command: bash -c "npm install && npm start"
+    ports:
+      - "3000:3000"
