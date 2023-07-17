@@ -1,5 +1,6 @@
 import os
 import requests
+import json
 from fastapi import HTTPException
 
 class YoutubeController:
@@ -20,7 +21,7 @@ class YoutubeController:
     
     def _get_playlist(self, youtubech_id, play_list_name = "uploads",):
         url = "https://www.googleapis.com/youtube/v3/channels"
-        params = dir(
+        params = dict(
             key=self.youtube_apikey,
             part="contentDetails",
             id=youtubech_id
@@ -42,14 +43,12 @@ class YoutubeController:
     def _get_playlist_videos(self, play_list_id):
         """play_list_idに登録されている動画リストを取得
 
-
         :param play_list_id
         :return
         """
-
         play_list_videos = []
         page_token = None
-        url = "https://www.googleapis.com/youtube/v3/playlisyItems"
+        url = "https://www.googleapis.com/youtube/v3/playlistItems"
         while True:
             params = dict(
                 key=self.youtube_apikey,
@@ -60,13 +59,31 @@ class YoutubeController:
             )
             res = requests.get(url=url, params=params)
             print(res)
-            res_json = res.json()
+
+            # Check if the request was successful
+            if res.status_code != 200:
+                print(f"Request failed with status code {res.status_code}")
+                return None
+
+            try:
+                res_json = res.json()
+            except json.decoder.JSONDecodeError:
+                print("Failed to decode the response")
+                return None
+
+            # Check if 'items' key exists in the response
+            if 'items' not in res_json:
+                print("'items' key not found in the response")
+                return None
+
             play_list_videos.extend(res_json['items'])
 
             try:
                 page_token = res_json['nextPageToken']
             except KeyError as e:
                 break
+
+        return play_list_videos
 
     def _get_statistics_data(self, play_list_videos):
         videos_statistics = []
@@ -96,9 +113,9 @@ class YoutubeController:
     def _combine_snippet_statistics_data(self, play_list_videos, videos_statistics):
         all_videos = []
         for video in play_list_videos:
-            for videos_statistic in videos_statistic['id']:
-                if video['snippet']['resourceId']['videoId'] == videos_statistic['id']:
-                    all_videos.append({**video['snippet'], **videos_statistic['statistics']})
+            for video_statistic in videos_statistics:
+                if video['snippet']['resourceId']['videoId'] == video_statistic['id']:
+                    all_videos.append({**video['snippet'], **video_statistic['statistics']})
 
         return all_videos
     
