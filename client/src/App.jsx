@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import Button from '@material-ui/core/Button';
+import Button from '@mui/material/Button';
 
 function App() {
   const [channelId, setChannelId] = useState("");
