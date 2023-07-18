@@ -18,10 +18,38 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# class Comment(BaseModel):
+#     text: str
+#     author: str
+#     date: str
+
+class Thumbnail(BaseModel):
+    url: str
+
+class Thumbnails(BaseModel):
+    default: Optional[Thumbnail]
+
 class Video(BaseModel):
     title: str
     description: str
     publishedAt: str
+    thumbnails: Thumbnails
+    category: Optional[str]
+    tags: Optional[List[str]]
+    viewCount: Optional[int]
+    likeCount: Optional[int]
+    # dislikeCount: Optional[int]
+    commentCount: Optional[int]
+    favoriteCount: Optional[int]
+    channelTitle: Optional[str]
+    channelDescription: Optional[str]
+    subscriberCount: Optional[int]
+    totalViews: Optional[int]
+    totalVideos: Optional[int]
+    # playlistTitle: Optional[str]
+    # playlistDescription: Optional[str]
+    # playlistVideoCount: Optional[int]
+    # comments: Optional[List[Comment]]
 
 @app.get("/videos")
 async def get_videos(channelId: str, apiKey: str):
@@ -32,7 +60,22 @@ async def get_videos(channelId: str, apiKey: str):
         Video(
             title=video['title'],
             description=video['description'],
-            publishedAt=video['publishedAt']
-            # 他に必要なフィールドがあれば追加
+            publishedAt=video['publishedAt'],
+            thumbnails=Thumbnails(default=Thumbnail(url=video['thumbnails']['default']['url'])),
+            category=video.get('category'),
+            tags=video.get('tags'),
+            viewCount=int(video['viewCount']),
+            likeCount=int(video['likeCount']),
+            commentCount=int(video['commentCount']),
+            favoriteCount=int(video['favoriteCount']),
+            channelTitle=video['channelTitle'],
+            channelDescription=video.get('channelDescription'),
+            subscriberCount=int(video.get('subscriberCount', 0)),
+            totalViews=int(video.get('totalViews', 0)),
+            totalVideos=int(video.get('totalVideos', 0)),
+            # playlistTitle=video.get('playlistTitle'),
+            # playlistDescription=video.get('playlistDescription'),
+            # playlistVideoCount=int(video.get('playlistVideoCount', 0)),
+            # comments=[Comment(text=c['text'], author=c['author'], date=c['date']) for c in video.get('comments', [])]
         ) for video in videos
     ]

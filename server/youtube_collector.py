@@ -11,11 +11,17 @@ class YoutubeController:
         self.all_videos = []
 
     def get_all_videos(self, youtubech_id=None):
+        # プレイリストの取得
         play_list_id = self._get_playlist(play_list_name = "uploads", youtubech_id=youtubech_id)
         print(play_list_id)
+        # プレイリスト内の全ての動画を取得
         play_list_videos = self._get_playlist_videos(play_list_id=play_list_id)
+        # 動画の統計情報を取得
         videos_statistics = self._get_statistics_data(play_list_videos=play_list_videos)
-        self.all_videos = self._combine_snippet_statistics_data(play_list_videos=play_list_videos, videos_statistics=videos_statistics)
+        # チャンネル情報の取得
+        channel_info = self._get_channel_info(youtubech_id)
+        # データの統合
+        self.all_videos = self._combine_snippet_statistics_data(play_list_videos=play_list_videos, videos_statistics=videos_statistics, channel_info=channel_info)
 
         return self.all_videos
     
@@ -109,28 +115,6 @@ class YoutubeController:
 
         return videos_statistics
     
-    def _get_comments(self, video_id):
-        """Get comments of a video
-
-        :param video_id
-        :return
-        """
-        url = "https://www.googleapis.com/youtube/v3/commentThreads"
-        params = dict(
-            key=self.youtube_apikey,
-            part="snippet",
-            videoId=video_id,
-            maxResults=20,  # Change this value to get more comments
-        )
-        res = requests.get(url=url, params=params)
-        res_json = res.json()
-        comments = [{"text": item['snippet']['topLevelComment']['snippet']['textDisplay'],
-                    "author": item['snippet']['topLevelComment']['snippet']['authorDisplayName'],
-                    "date": item['snippet']['topLevelComment']['snippet']['publishedAt']}
-                    for item in res_json['items']]
-
-        return comments
-    
     def _get_channel_info(self, channel_id):
         """Get information of a channel
 
@@ -146,8 +130,8 @@ class YoutubeController:
         res = requests.get(url=url, params=params)
         res_json = res.json()
         channel_info = {
-            "title": res_json['items'][0]['snippet']['title'],
-            "description": res_json['items'][0]['snippet']['description'],
+            "channelTitle": res_json['items'][0]['snippet']['title'],
+            "channelDescription": res_json['items'][0]['snippet']['description'],
             "subscriberCount": res_json['items'][0]['statistics']['subscriberCount'],
             "totalViews": res_json['items'][0]['statistics']['viewCount'],
             "totalVideos": res_json['items'][0]['statistics']['videoCount'],
@@ -155,37 +139,86 @@ class YoutubeController:
 
         return channel_info
     
-    def _get_playlist_info(self, playlist_id):
-        """Get information of a playlist
-
-        :param playlist_id
-        :return
-        """
-        url = "https://www.googleapis.com/youtube/v3/playlists"
+    def _get_video_categories(self):
+        url = "https://www.googleapis.com/youtube/v3/videoCategories"
         params = dict(
             key=self.youtube_apikey,
-            part="snippet,contentDetails",
-            id=playlist_id,
+            part="snippet",
+            regionCode="US"
         )
         res = requests.get(url=url, params=params)
         res_json = res.json()
-        playlist_info = {
-            "title": res_json['items'][0]['snippet']['title'],
-            "description": res_json['items'][0]['snippet']['description'],
-            "videoCount": res_json['items'][0]['contentDetails']['itemCount'],
-        }
+        categories = {item['id']: item['snippet']['title'] for item in res_json['items']}
+        return categories
 
-        return playlist_info
+    def _get_video_details(self, video_id):
+        url = "https://www.googleapis.com/youtube/v3/videos"
+        params = dict(
+            key=self.youtube_apikey,
+            part="snippet",
+            id=video_id
+        )
+        res = requests.get(url=url, params=params)
+        res_json = res.json()
+        video_details = res_json['items'][0]['snippet']
+        categories = self._get_video_categories()
+        video_details['category'] = categories.get(video_details['categoryId'], 'Unknown')
+        return video_details
     
-    def _combine_snippet_statistics_data(self, play_list_videos, videos_statistics):
+    # def _get_playlist_info(self, playlist_id):
+    #     """Get information of a playlist
+
+    #     :param playlist_id
+    #     :return
+    #     """
+    #     url = "https://www.googleapis.com/youtube/v3/playlists"
+    #     params = dict(
+    #         key=self.youtube_apikey,
+    #         part="snippet,contentDetails",
+    #         id=playlist_id,
+    #     )
+    #     res = requests.get(url=url, params=params)
+    #     res_json = res.json()
+    #     playlist_info = {
+    #         "title": res_json['items'][0]['snippet']['title'],
+    #         "description": res_json['items'][0]['snippet']['description'],
+    #         "videoCount": res_json['items'][0]['contentDetails']['itemCount'],
+    #     }
+
+    #     return playlist_info
+
+    # def _get_comments(self, video_id):
+    #     """Get comments of a video
+
+    #     :param video_id
+    #     :return
+    #     """
+    #     url = "https://www.googleapis.com/youtube/v3/commentThreads"
+    #     params = dict(
+    #         key=self.youtube_apikey,
+    #         part="snippet",
+    #         videoId=video_id,
+    #         maxResults=20,  # Change this value to get more comments
+    #     )
+    #     res = requests.get(url=url, params=params)
+    #     res_json = res.json()
+    #     comments = [{"text": item['snippet']['topLevelComment']['snippet']['textDisplay'],
+    #                 "author": item['snippet']['topLevelComment']['snippet']['authorDisplayName'],
+    #                 "date": item['snippet']['topLevelComment']['snippet']['publishedAt']}
+    #                 for item in res_json['items']]
+
+    #     return comments
+    
+    def _combine_snippet_statistics_data(self, play_list_videos, videos_statistics, channel_info):
         all_videos = []
         for video in play_list_videos:
+            video_details = self._get_video_details(video['snippet']['resourceId']['videoId'])
             for videos_statistic in videos_statistics:
                 if video['snippet']['resourceId']['videoId'] == videos_statistic['id']:
-                    print('Video Snippet:', video['snippet'])  # Add this line
-                    print('Video Statistics:', videos_statistic['statistics'])  # Add this line
-                    combined_data = {**video['snippet'], **videos_statistic['statistics']}
-                    print('Combined Data:', combined_data)  # Add this line
+                    print('Video Details:', video_details)
+                    print('Video Statistics:', videos_statistic['statistics'])
+                    combined_data = {**video_details, **videos_statistic['statistics'], **channel_info}
+                    print('Combined Data:', combined_data)
                     all_videos.append(combined_data)
 
         return all_videos

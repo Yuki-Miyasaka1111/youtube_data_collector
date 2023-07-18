@@ -24,6 +24,7 @@ function App() {
 		if (!channelId || !apiKey) return;
 		try {
 			const response = await axios.get(`http://localhost:8000/videos?channelId=${channelId}&apiKey=${apiKey}`);
+			console.log(response.data);
 			setVideoData(response.data || []);
 			} catch (error) {
 			console.error(error);
@@ -88,7 +89,6 @@ function App() {
 					</Button>
 				</Box>
 				{Array.isArray(videoData) ? videoData.map((video, index) => (
-					console.log(video),
 					<Card key={index} style={{ marginTop: "1rem" }}>
 					<CardContent>
 						<Typography variant="h5">{video.title}</Typography>
@@ -99,7 +99,7 @@ function App() {
 						<Typography variant="body2">Tags: {video.tags?.join(', ')}</Typography>
 						<Typography variant="body2">Views: {video.viewCount}</Typography>
 						<Typography variant="body2">Likes: {video.likeCount}</Typography>
-						<Typography variant="body2">Dislikes: {video.dislikeCount}</Typography>
+						{/* <Typography variant="body2">Dislikes: {video.dislikeCount}</Typography> */}
 						<Typography variant="body2">Comments: {video.commentCount}</Typography>
 						<Typography variant="body2">Favorites: {video.favoriteCount}</Typography>
 						<Typography variant="body2">Channel Title: {video.channelTitle}</Typography>
@@ -107,7 +107,7 @@ function App() {
 						<Typography variant="body2">Subscriber Count: {video.subscriberCount}</Typography>
 						<Typography variant="body2">Total Views: {video.totalViews}</Typography>
 						<Typography variant="body2">Total Videos: {video.totalVideos}</Typography>
-						<Typography variant="body2">Playlist Title: {video.playlistTitle}</Typography>
+						{/* <Typography variant="body2">Playlist Title: {video.playlistTitle}</Typography>
 						<Typography variant="body2">Playlist Description: {video.playlistDescription}</Typography>
 						<Typography variant="body2">Playlist Video Count: {video.playlistVideoCount || 'Not available'}</Typography>
 						{video.comments && video.comments.map((comment, commentIndex) => (
@@ -117,6 +117,7 @@ function App() {
 							<Typography variant="body2">Comment Date: {comment.date}</Typography>
 							</div>
 						))}
+						{console.log(video)} */}
 					</CardContent>
 					</Card>
 				)) : null}
