@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from youtube_collector import YoutubeController
-import Button from '@material-ui/core/Button';
 
 app = FastAPI()
 
