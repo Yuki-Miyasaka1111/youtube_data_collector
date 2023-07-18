@@ -95,8 +95,7 @@ function App() {
 						<Typography variant="body2">{video.description}</Typography>
 						<Typography variant="body2">{video.publishedAt}</Typography>
 						{video.thumbnails?.default && <img src={video.thumbnails.default.url} alt="video thumbnail" />}
-						{console.log(video)}
-						{/* <Typography variant="body2">Category: {video.category}</Typography>
+						<Typography variant="body2">Category: {video.category}</Typography>
 						<Typography variant="body2">Tags: {video.tags?.join(', ')}</Typography>
 						<Typography variant="body2">Views: {video.viewCount}</Typography>
 						<Typography variant="body2">Likes: {video.likeCount}</Typography>
@@ -117,7 +116,7 @@ function App() {
 							<Typography variant="body2">Comment Author: {comment.author}</Typography>
 							<Typography variant="body2">Comment Date: {comment.date}</Typography>
 							</div>
-						))} */}
+						))}
 					</CardContent>
 					</Card>
 				)) : null}
