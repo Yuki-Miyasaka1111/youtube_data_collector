@@ -23,7 +23,7 @@ function App() {
 	const fetchVideoData = async () => {
 		if (!channelId || !apiKey) return;
 		try {
-			const response = await axios.get(`http://localhost:8000/videos?channelId=${channelId}&apiKey=${apiKey}`);
+			const response = await axios.get(`http://localhost:8001/videos?channelId=${channelId}&apiKey=${apiKey}`);
 			console.log(response.data);
 			setVideoData(response.data || []);
 			} catch (error) {
