@@ -31,63 +31,132 @@ function App() {
 		}
 	};
 
+	const [showAlert, setShowAlert] = useState(false);
+
+	const resetCSVContent = async () => {
+		try {
+			const response = await fetch("http://localhost:8001/reset_csv", {
+				method: "POST",
+			});
+	
+			const data = await response.json();
+			console.log(data.message);
+			
+			setShowAlert(false); // アラートを非表示にする
+		} catch (error) {
+			console.error("Failed to reset CSV:", error);
+		}
+	};
+
 	return (
 		<ThemeProvider theme={theme}>
 			<div style={{ padding: "1rem" }}>
-				<Box
+			<Box
+				sx={{
+					marginTop: 8,
+					display: "flex",
+					flexDirection: "column",
+					alignItems: "center",
+				}}
+			>
+				<Typography
+					variant="h3"
 					sx={{
-						marginTop: 8,
-						display: "flex",
-						flexDirection: "column",
-						alignItems: "center",
+						width: "100%",
+						textAlign: 'center', 
+						fontSize: 40,
 					}}
 				>
-					<Typography
-						variant="h3"
-						sx={{
-							width: "100%",
-							textAlign: 'center', 
-							fontSize: 40,
-						}}
+					Youtube Data Collector
+				</Typography>
+				<TextField 
+					sx={{
+						width: 400,
+						marginTop: "3rem",
+					}}
+					label="API Key"
+					variant="outlined"
+					value={apiKey}
+					onChange={(e) => setApiKey(e.target.value)}
+				/>
+				<TextField
+					sx={{
+						width: 400,
+						marginTop: "1rem",
+					}}
+					label="Channel ID"
+					variant="outlined"
+					value={channelId}
+					onChange={(e) => setChannelId(e.target.value)}
+				/>
+				<Button
+					sx={{
+						backgroundColor: "#3D77B1",
+						color: "#fff",
+						marginTop: "1rem",
+						width: 400,
+						'&:hover': {
+							backgroundColor: "#30638E",
+						},
+					}}
+					variant="contained" 
+					onClick={fetchVideoData} 
+				>
+					Submit
+				</Button>
+				<Button
+					component="a"
+					href="http://localhost:8001/download_csv/"
+					download="youtube_videos.csv"
+					sx={{
+						backgroundColor: "#4CAF50",
+						color: "#fff",
+						marginTop: "1rem",
+						width: 400,
+						'&:hover': {
+							backgroundColor: "#45a049",
+						},
+					}}
+					variant="contained"
+				>
+					Download CSV
+				</Button>
+				<Button
+					sx={{
+						backgroundColor: "#F44336", // 赤色で警告感を出す
+						color: "#fff",
+						marginTop: "1rem",
+						width: 400,
+						'&:hover': {
+						backgroundColor: "#D32F2F",
+						},
+					}}
+					variant="contained"
+					onClick={() => setShowAlert(true)} // アラートを表示
 					>
-						Youtube Data Collector
-					</Typography>
-					<TextField 
-						sx={{
-							width: 400,
-							marginTop: "3rem",
-						}}
-						label="API Key"
-						variant="outlined"
-						value={apiKey}
-						onChange={(e) => setApiKey(e.target.value)}
-					/>
-					<TextField
-						sx={{
-							width: 400,
-							marginTop: "1rem",
-						}}
-						label="Channel ID"
-						variant="outlined"
-						value={channelId}
-						onChange={(e) => setChannelId(e.target.value)}
-					/>
-					<Button
-						sx={{
-							backgroundColor: "#3D77B1",
-							color: "#fff",
-							marginTop: "1rem",
-							width: 400,
-							'&:hover': {
-								backgroundColor: "#30638E", // オンマウス時の色
-							},
-						}}
-						variant="contained" 
-						onClick={fetchVideoData} 
-					>
-							Submit
-					</Button>
-				</Box>
+					Reset CSV Content
+				</Button>
+
+				{/* アラートの表示 */}
+				{showAlert && (
+					<div style={{ marginTop: "1rem" }}>
+						<p>本当に消してもよいですか？</p>
+						<Button 
+							variant="contained"
+							onClick={resetCSVContent}
+							style={{ marginRight: "1rem" }}
+							>
+							OK
+						</Button>
+						<Button 
+							variant="outlined" 
+							onClick={() => setShowAlert(false)}
+							>
+							Cancel
+						</Button>
+					</div>
+				)}
+			</Box>
 				{Array.isArray(videoData) ? videoData.map((video, index) => (
 					<Card key={index} style={{ marginTop: "1rem" }}>
 					<CardContent>

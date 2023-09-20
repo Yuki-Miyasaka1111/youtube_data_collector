@@ -1,8 +1,12 @@
 from fastapi import FastAPI
+from pathlib import Path
+from fastapi import FastAPI, File, HTTPException, Response
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from youtube_collector import YoutubeController
+import os
 
 app = FastAPI()
 
@@ -56,7 +60,7 @@ async def get_videos(channelId: str, apiKey: str):
     controller = YoutubeController(api_key=apiKey)
     videos = controller.get_all_videos(youtubech_id=channelId)
     # 必要な情報だけを抽出して返却
-    return [
+    video_data_list = [
         Video(
             title=video['title'],
             description=video['description'],
@@ -79,3 +83,27 @@ async def get_videos(channelId: str, apiKey: str):
             # comments=[Comment(text=c['text'], author=c['author'], date=c['date']) for c in video.get('comments', [])]
         ) for video in videos
     ]
+
+    csv_path = "../data/videos.csv"
+    controller.save_to_csv(video_data_list, csv_path)
+
+    return video_data_list
+
+@app.get("/download_csv/")
+def download_csv():
+    file_path = "../data/videos.csv"
+    if os.path.exists(file_path):
+        return FileResponse(file_path, media_type="text/csv", filename="videos.csv")
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+@app.post("/reset_csv")
+def reset_csv():
+    csv_path = "../data/videos.csv"
+    
+    # ファイルを開いてすぐ閉じることで内容をクリアする
+    if os.path.exists(csv_path):
+        open(csv_path, 'w').close()
+        return {"message": "CSV reset successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
