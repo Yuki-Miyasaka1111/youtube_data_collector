@@ -23,3 +23,5 @@ yarn-debug.log*
 yarn-error.log*
 
 api_key.txt
+/api_key.txt
+```
