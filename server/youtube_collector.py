@@ -2,6 +2,7 @@ import os
 import requests
 import json
 import csv
+from typing import Optional
 from fastapi import HTTPException
 
 class YoutubeController:
@@ -118,6 +119,13 @@ class YoutubeController:
 
         return all_videos
 
+    @staticmethod
+    def encode_to_shiftjis(s: Optional[str]) -> str:
+        if s is None:
+            return ""
+        encoded_str = s.encode("shift_jis", errors="replace").decode("shift_jis")
+        return encoded_str
+
     def save_to_csv(self, video_data_list, csv_path):
         headers = [
             'title', 'description', 'publishedAt', 'thumbnail_url',
@@ -135,12 +143,21 @@ class YoutubeController:
                 writer.writerow(headers)
             for video in video_data_list:
                 writer.writerow([
-                    video.title, video.description, video.publishedAt,
-                    video.thumbnails.default.url, video.category,
-                    ','.join(video.tags if video.tags else []), video.viewCount, video.likeCount,
-                    video.commentCount, video.favoriteCount, video.channelTitle,
-                    video.channelDescription, video.subscriberCount,
-                    video.totalViews, video.totalVideos
+                    YoutubeController.encode_to_shiftjis(video.title),
+                    YoutubeController.encode_to_shiftjis(video.description),
+                    YoutubeController.encode_to_shiftjis(video.publishedAt),
+                    YoutubeController.encode_to_shiftjis(video.thumbnails.default.url),
+                    YoutubeController.encode_to_shiftjis(video.category),
+                    YoutubeController.encode_to_shiftjis(','.join(video.tags if video.tags else [])),
+                    video.viewCount, 
+                    video.likeCount,
+                    video.commentCount,
+                    video.favoriteCount,
+                    YoutubeController.encode_to_shiftjis(video.channelTitle),
+                    YoutubeController.encode_to_shiftjis(video.channelDescription),
+                    video.subscriberCount,
+                    video.totalViews,
+                    video.totalVideos
                 ])
 
     def reset_csv(self, csv_path):
